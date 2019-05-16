@@ -2,7 +2,7 @@
 
 import vcf
 
-__author__ = 'Gerry'
+__author__ = 'Gerhard Bilek'
 
 
 class Assignment2:
@@ -17,7 +17,16 @@ class Assignment2:
         Get the average PHRED quality of all variants
         :return:
         '''    
-        print("TODO")
+        quality = 0
+        counter = 0
+        with open("chr22_new.vcf") as my_vcf_fh:
+            vcf_reader = vcf.Reader(my_vcf_fh)
+            for record in vcf_reader:
+                quality = quality + record.QUAL
+                counter += 1
+                avg_quality = quality / counter
+        print("Average quality of the variants is: ", avg_quality)
+        #return avg_quality
         
         
     def get_total_number_of_variants_of_file(self):
@@ -27,7 +36,7 @@ class Assignment2:
         '''
         #grep '^chr22' chr22.vcf | wc -l
         v_counter = 0
-        with open("chr22.vcf") as my_vcf_fh:
+        with open("chr22_new.vcf") as my_vcf_fh:
             vcf_reader = vcf.Reader(my_vcf_fh)
             for record in vcf_reader:
                 v_counter +=  1
@@ -35,38 +44,42 @@ class Assignment2:
         #print("Total Number of Variants: ", v_counter)
     
     
-    def get_variant_caller_of_vcf(self):            # NICHT vorahnden -- HILFE!
+    def get_variant_caller_of_vcf(self):
         '''
         Return the variant caller name
         :return: 
         '''
-        print("TODO")
+        caller_set = set()
+        with open("chr22_new.vcf") as my_vcf_fh:
+            vcf_reader = vcf.Reader(my_vcf_fh)
+            for record in vcf_reader:
+                info = record.INFO["callsetnames"]
+                for i in range(len(info)):
+                    caller_set.add(info[i])
+        print(" Variant caller: ", caller_set)
+        #return caller_set
         
         
-    def get_human_reference_version(self):    # HILFE ---Funktioniert  nicht
+    def get_human_reference_version(self):
         '''
         Return the genome reference version
         :return: 
         '''
-        snv_counter = 0
-        with open("chr22.vcf") as my_vcf_fh:
+        with open("chr22_new.vcf") as my_vcf_fh:
             vcf_reader = vcf.Reader(my_vcf_fh)
             for record in vcf_reader:
-                if record.is_snp:
-                    snv_counter = snv_counter + 1
-        #return(snv_counter)
-        print("Number of snv: ", snv_counter)
+                info = record.INFO["difficultregion"] # Liste ... 1
+                reference_version = info[0] # Neue Variable für den Eintrag
+                print(reference_version[0:4])
+                break
 
-        print("TODO")
-        
-        
     def get_number_of_indels(self):
         '''
         Return the number of identified INDELs
         :return:
         '''
         indel_counter = 0
-        with open("chr22.vcf") as my_vcf_fh:
+        with open("chr22_new.vcf") as my_vcf_fh:
             vcf_reader = vcf.Reader(my_vcf_fh)
             for record in vcf_reader:
                 if record.is_indel:
@@ -74,16 +87,13 @@ class Assignment2:
         return(indel_counter)
 
 
-        #print("TODO")
-        
-
     def get_number_of_snvs(self):
         '''
         Return the number of SNVs
         :return: 
         ''' 
         snv_counter = 0
-        with open("chr22.vcf") as my_vcf_fh:
+        with open("chr22_new.vcf") as my_vcf_fh:
             vcf_reader = vcf.Reader(my_vcf_fh)
             for record in vcf_reader:
                 if record.is_snp:
@@ -96,8 +106,7 @@ class Assignment2:
         Return the number of heterozygous variants
         :return: 
         '''
-        
-        with open("chr22.vcf") as my_vcf_fh:
+        with open("chr22_new.vcf") as my_vcf_fh:
             het_counter = 0
             vcf_reader = vcf.Reader(my_vcf_fh)
             for record in vcf_reader:
@@ -105,9 +114,7 @@ class Assignment2:
                     het_counter += 1
 
             #return(vcf_reader.num_het)
-
         return(het_counter)
-        #print("TODO")
         
     
     def merge_chrs_into_one_vcf(self):
@@ -116,32 +123,39 @@ class Assignment2:
         :return:
         '''
 
-        file = open("chr21.vcf") 
-        w_f = open("newfile1.vcf", "w+") 
-        for line in file: 
-            
+        file = open("chr21_new.vcf")
+        w_f = open("newfile2.vcf", "w+")
+        linesFirstFile = 0
+        for line in file:
             w_f.write(line)
+            linesFirstFile+=1
+        file.close
+        w_f.close
+        print("lines of first file: ", linesFirstFile)
+
+        file = open("chr22_new.vcf")
+        w_f = open("newfile2.vcf", "a")
+        linesSecondFile = 0
+        for line in file:
+            w_f.write(line)
+            linesSecondFile +=1
         file.close
         w_f.close
 
-        file = open("chr22.vcf") 
-        w_f = open("newfile1.vcf", "a") 
-        for line in file: 
-            w_f.write(line)
-        file.close
-        w_f.close
+        print("lines of second file: ", linesSecondFile)
+        lineSum = linesFirstFile + linesSecondFile
+        print("sum of merged lines: ", lineSum)
 
-        #print("TODO")
-        
-        #print("Number of total variants")
-        
-    
+
     def print_summary(self):
-        #print("Total Number of Variants: ", self.get_total_number_of_variants_of_file())
-        #print("Number of INDELs", self.get_number_of_indels())
-        #print("Number of SNVS: ", self.get_number_of_snvs())
-        #print("Number of Heterozygous Variants: ", self.get_number_of_heterozygous_variants())
-        print("lines here: " , self.merge_chrs_into_one_vcf())
+        self.get_average_quality_of_file()
+        print("Total Number of Variants: ", self.get_total_number_of_variants_of_file())
+        self.get_variant_caller_of_vcf()
+        print("human ref.: ", self.get_human_reference_version())
+        print("Number of INDELs", self.get_number_of_indels())
+        print("Number of SNVS: ", self.get_number_of_snvs())
+        print("Number of Heterozygous Variants: ", self.get_number_of_heterozygous_variants())
+        self.merge_chrs_into_one_vcf()
     
     
 def main():
@@ -149,8 +163,7 @@ def main():
     assignment2 = Assignment2()
     assignment2.print_summary()
     print("Done with assignment 2")
-        
-        
+
 if __name__ == '__main__':
     main()
    
